@@ -5,8 +5,292 @@
 **Nombre:** Sistema de Gestión IPS  
 **Versión:** 1.0.0  
 **Fecha:** Octubre 2025  
-**Arquitectura:** Hexagonal (Puertos y Adaptadores) + DDD  
+**Arquitectura:** Monolito Hexagonal (Puertos y Adaptadores) + DDD  
 **Framework:** Flask 3.x + Python 3.13  
+
+---
+
+## 📐 Arquitectura del Sistema
+
+### Patrón Arquitectónico: Monolito Hexagonal
+
+El sistema implementa una **arquitectura monolítica modular** con principios de **arquitectura hexagonal (Puertos y Adaptadores)**, combinando lo mejor de ambos mundos:
+
+#### 🏛️ **Monolito Modular**
+
+El sistema se despliega como una **aplicación única** con las siguientes características:
+
+- **Proceso único:** Todo el sistema corre en un solo proceso Flask
+- **Base de datos unificada:** SQLite/PostgreSQL compartida
+- **Despliegue simplificado:** Un solo `run.py` para ejecutar la aplicación
+- **Módulos por dominio:** Organización interna clara (pacientes, citas, empleados, etc.)
+
+**Ventajas para este MVP:**
+- ✅ Desarrollo rápido y simplicidad operacional
+- ✅ Fácil debugging y testing
+- ✅ Sin complejidad de comunicación entre servicios
+- ✅ Menor overhead de infraestructura
+
+#### ⬡ **Arquitectura Hexagonal (Puertos y Adaptadores)**
+
+Implementa separación de responsabilidades mediante capas bien definidas:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    PRESENTACIÓN (UI)                     │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────┐ │
+│  │  Auth    │  │ Patients │  │Employees │  │  Admin  │ │
+│  │ Routes   │  │  Routes  │  │  Routes  │  │ Routes  │ │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬────┘ │
+└───────┼─────────────┼─────────────┼──────────────┼──────┘
+        │             │             │              │
+┌───────▼─────────────▼─────────────▼──────────────▼──────┐
+│              CAPA DE APLICACIÓN (Services)              │
+│  ┌────────────────┐  ┌─────────────────┐  ┌──────────┐ │
+│  │  UserService   │  │ PatientService  │  │ Employee │ │
+│  │ (Casos de Uso) │  │ (Casos de Uso)  │  │ Service  │ │
+│  └───────┬────────┘  └────────┬────────┘  └────┬─────┘ │
+└──────────┼────────────────────┼─────────────────┼───────┘
+           │                    │                 │
+           │          ┌─────────▼────────┐        │
+           │          │   PUERTOS (ABC)  │        │
+           │          │  ┌──────────────┐│        │
+           └──────────┼─►│ Repository   ││────────┘
+                      │  │   Ports      ││
+                      │  └──────────────┘│
+                      └─────────┬────────┘
+┌─────────────────────────────┬─▼──────────────────────────┐
+│              ADAPTADORES (Implementaciones)              │
+│  ┌─────────────────────┐  ┌─────────────────────────┐   │
+│  │ SqlAlchemyUser      │  │ SqlAlchemyPatient       │   │
+│  │ Repository          │  │ Repository              │   │
+│  └──────────┬──────────┘  └───────────┬─────────────┘   │
+└─────────────┼─────────────────────────┼─────────────────┘
+              │                         │
+┌─────────────▼─────────────────────────▼─────────────────┐
+│              INFRAESTRUCTURA (DB, Logs, etc.)           │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐              │
+│  │SQLAlchemy│  │  Audit   │  │  Rate    │              │
+│  │   DB     │  │  Logger  │  │ Limiter  │              │
+│  └──────────┘  └──────────┘  └──────────┘              │
+└─────────────────────────────────────────────────────────┘
+```
+
+### Componentes Clave
+
+#### 1️⃣ **Dominio (Domain Layer)**
+**Ubicación:** `app/domain/`, `app/models.py`
+
+- **Modelos de dominio:** `User`, `Patient`, `Appointment`, `MedicalRecord`, `Employee`
+- **Validadores:** `app/domain/validators.py` (lógica de negocio pura)
+- **Sin dependencias externas:** No conoce Flask, SQLAlchemy ni infraestructura
+
+```python
+# Ejemplo: app/models.py
+class User(UserMixin, db.Model):
+    def set_password(self, password):
+        # Lógica de dominio pura
+        self.password_hash = generate_password_hash(password)
+```
+
+#### 2️⃣ **Puertos (Ports)**
+**Ubicación:** `app/services/ports.py`
+
+Definen **interfaces abstractas** (contratos) que el dominio necesita:
+
+```python
+class UserRepositoryPort(ABC):
+    @abstractmethod
+    def add(self, user: User) -> User:
+        pass
+    
+    @abstractmethod
+    def get_by_username(self, username: str) -> User | None:
+        pass
+```
+
+**Puertos definidos:**
+- `UserRepositoryPort`
+- `PatientRepositoryPort`
+- `AppointmentRepositoryPort`
+- `MedicalRecordRepositoryPort`
+- `EmployeeRepositoryPort`
+
+#### 3️⃣ **Servicios de Aplicación (Application Services)**
+**Ubicación:** `app/services/`
+
+Contienen **casos de uso** y **lógica de negocio**. Dependen de **puertos**, no de implementaciones:
+
+```python
+# Ejemplo: app/services/user_service.py
+class UserService:
+    def __init__(self, user_repository: UserRepositoryPort):
+        self.user_repo = user_repository  # ← Depende del puerto
+    
+    def register_user(self, username, password, role):
+        # Caso de uso: registrar usuario
+        if self.user_repo.get_by_username(username):
+            raise ValueError("Usuario ya existe")
+        # ... lógica de negocio
+```
+
+#### 4️⃣ **Adaptadores (Adapters)**
+**Ubicación:** `app/adapters/`
+
+Implementaciones **concretas** de los puertos:
+
+```python
+# Ejemplo: app/adapters/sql_user_repository.py
+class SqlAlchemyUserRepository(UserRepositoryPort):
+    def add(self, user: User) -> User:
+        db.session.add(user)
+        db.session.commit()
+        return user
+```
+
+**Adaptadores implementados:**
+- `SqlAlchemyUserRepository`
+- `SqlAlchemyPatientRepository`
+- `SqlAlchemyAppointmentRepository`
+- `SqlAlchemyMedicalRecordRepository`
+- `SqlAlchemyEmployeeRepository`
+
+#### 5️⃣ **Infraestructura (Infrastructure)**
+**Ubicación:** `app/infrastructure/`
+
+Servicios técnicos transversales:
+
+- **Seguridad:** `security/password_policy.py`, `security/rate_limiter.py`, `security/access_control.py`
+- **Auditoría:** `audit/audit_log.py`
+- **Logging:** `logging/logger.py`
+- **Persistencia:** `persistence/sql_repository.py`
+
+#### 6️⃣ **Presentación (UI Layer)**
+**Ubicación:** `app/auth/routes.py`, `app/patients/routes.py`, etc.
+
+Controladores Flask que:
+- Reciben requests HTTP
+- Validan formularios
+- Invocan servicios de aplicación
+- Retornan respuestas (HTML/JSON)
+
+```python
+# Ejemplo: app/auth/routes.py
+@auth_bp.route('/register', methods=['POST'])
+def register():
+    # Validar formulario
+    # Llamar al servicio
+    service = UserService(SqlAlchemyUserRepository())
+    service.register_user(username, password, role)
+    # Retornar respuesta
+```
+
+### Flujo de Datos (Ejemplo: Registro de Usuario)
+
+```
+1. Usuario completa formulario → POST /auth/register
+                                         │
+2. Routes valida formulario ────────────┤
+   (app/auth/routes.py)                  │
+                                         ▼
+3. Invoca UserService.register_user() ──┤
+   (app/services/user_service.py)        │
+                                         ▼
+4. UserService usa UserRepositoryPort ──┤ (interfaz abstracta)
+                                         │
+                                         ▼
+5. SqlAlchemyUserRepository implementa ─┤
+   el puerto (app/adapters/)             │
+                                         ▼
+6. Guarda en DB vía SQLAlchemy ─────────┤
+   (app/models.py, db.session.commit)    │
+                                         ▼
+7. Retorna éxito → flash + redirect ────┘
+```
+
+### Ventajas de esta Arquitectura
+
+#### ✅ **Testabilidad**
+- Tests unitarios con **repositorios falsos** (sin DB real)
+- Ejemplo: `tests/test_user_service.py` usa `FakeUserRepository`
+
+```python
+class FakeUserRepository(UserRepositoryPort):
+    def __init__(self):
+        self.users = []  # En memoria, sin DB
+```
+
+#### ✅ **Desacoplamiento**
+- Lógica de negocio **independiente** de Flask y SQLAlchemy
+- Fácil migrar de SQLite a PostgreSQL (solo cambiar adaptador)
+- Posible cambiar de Flask a FastAPI sin tocar servicios
+
+#### ✅ **Mantenibilidad**
+- Responsabilidades claras por capa
+- Código organizado por dominio (pacientes, citas, empleados)
+- Fácil localizar bugs y agregar features
+
+#### ✅ **Escalabilidad Futura**
+- Si el sistema crece, módulos pueden **extraerse** a microservicios
+- Los puertos ya definen contratos para comunicación
+- Ejemplo: `PatientService` podría ser un microservicio independiente
+
+### Tecnologías por Capa
+
+| Capa | Tecnologías |
+|------|-------------|
+| **Presentación** | Flask Blueprints, Jinja2, WTForms, Bootstrap 5 |
+| **Aplicación** | Python 3.13, Servicios puros |
+| **Dominio** | Python nativo (sin frameworks) |
+| **Adaptadores** | SQLAlchemy, Werkzeug (hashing) |
+| **Infraestructura** | Flask-Login, Flask-WTF, logging, auditoría |
+
+### Convenciones de Código
+
+#### Nombres de Archivos
+- Puertos: `app/services/ports.py` (interfaces ABC)
+- Servicios: `app/services/*_service.py` (casos de uso)
+- Adaptadores: `app/adapters/sql_*_repository.py` (implementaciones)
+- Rutas: `app/<modulo>/routes.py` (controladores)
+
+#### Inyección de Dependencias
+Manual mediante constructores:
+
+```python
+# En routes.py
+user_repo = SqlAlchemyUserRepository()
+user_service = UserService(user_repo)
+```
+
+En tests:
+```python
+# En test_user_service.py
+fake_repo = FakeUserRepository()
+user_service = UserService(fake_repo)
+```
+
+### Decisiones Arquitectónicas
+
+#### ¿Por qué Monolito?
+- **MVP:** Velocidad de desarrollo y simplicidad
+- **Equipo pequeño:** Un solo desarrollador o equipo reducido
+- **Requisitos claros:** Dominio bien definido (gestión IPS)
+
+#### ¿Por qué Hexagonal?
+- **Calidad de código:** Tests unitarios sin DB
+- **Flexibilidad:** Cambiar DB/framework sin dolor
+- **Preparación futura:** Migración a microservicios facilitada
+
+#### ¿Cuándo escalar?
+El monolito puede manejar **miles de usuarios** con:
+- PostgreSQL en producción
+- Caché con Redis
+- Load balancer (múltiples instancias Flask)
+
+Considerar microservicios solo si:
+- Equipos independientes por módulo
+- Escala diferenciada (ej: citas >> empleados)
+- Tecnologías heterogéneas necesarias
 
 ---
 
