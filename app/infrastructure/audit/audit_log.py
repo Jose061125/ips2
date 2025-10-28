@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import datetime
 from typing import Any, Dict
 from flask import request
@@ -12,6 +13,9 @@ class AuditLogger:
         logger = logging.getLogger('audit')
         logger.setLevel(logging.INFO)
         
+        # Ensure logs directory exists
+        os.makedirs('logs', exist_ok=True)
+
         handler = logging.FileHandler('logs/audit.log')
         formatter = logging.Formatter(
             '%(asctime)s - %(levelname)s - %(message)s'

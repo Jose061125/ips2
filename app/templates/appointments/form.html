@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <!-- Header -->
+            <div class="mb-4">
+                <h1 class="display-6">
+                    <i class="bi bi-calendar-plus text-success"></i> {{ title }}
+                </h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Inicio</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('appointments.index') }}">Citas</a></li>
+                        <li class="breadcrumb-item active">{{ title }}</li>
+                    </ol>
+                </nav>
+            </div>
+
+            <!-- Form Card -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-clipboard-check"></i> Datos de la Cita</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-4">
+                            <label class="form-label"><i class="bi bi-person"></i> {{ form.patient_id.label.text }}</label>
+                            {{ form.patient_id(class="form-select form-select-lg") }}
+                            {% if form.patient_id.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.patient_id.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Seleccione el paciente para esta cita</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label"><i class="bi bi-calendar-event"></i> {{ form.scheduled_at.label.text }}</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text"><i class="bi bi-clock"></i></span>
+                                {{ form.scheduled_at(class="form-control", placeholder="YYYY-MM-DD HH:MM", value="2025-10-28 10:00") }}
+                            </div>
+                            {% if form.scheduled_at.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.scheduled_at.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Formato: YYYY-MM-DD HH:MM (ejemplo: 2025-10-28 14:30)</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label"><i class="bi bi-chat-left-text"></i> {{ form.reason.label.text }}</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-pencil"></i></span>
+                                {{ form.reason(class="form-control", placeholder="Motivo de la consulta", rows="3") }}
+                            </div>
+                            {% if form.reason.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.reason.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Info Box -->
+                        <div class="alert alert-info" role="alert">
+                            <i class="bi bi-info-circle"></i> <strong>Nota:</strong> 
+                            Asegúrese de confirmar la disponibilidad del médico para el horario seleccionado.
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{{ url_for('appointments.index') }}" class="btn btn-secondary btn-lg">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                            {{ form.submit(class="btn btn-success btn-lg") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

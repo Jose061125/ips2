@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 import threading
 from flask import request, abort
+from flask_login import current_user
 from functools import wraps
 
 class RateLimiter:
@@ -26,10 +27,22 @@ class RateLimiter:
             return False
 
 def rate_limit(f):
+    """
+    Rate limiting decorator that tracks by IP address and optionally by user.
+    ISO 27001 - A.9.4.2, A.9.4.4: Access control and authentication attempts monitoring
+    """
     @wraps(f)
     def decorated_function(*args, **kwargs):
         limiter = RateLimiter()
-        if limiter.is_rate_limited(request.remote_addr):
-            abort(429)
+        
+        # Create composite key: IP + username (if authenticated)
+        ip_addr = request.remote_addr
+        if current_user.is_authenticated:
+            rate_key = f"{ip_addr}:{current_user.username}"
+        else:
+            rate_key = ip_addr
+        
+        if limiter.is_rate_limited(rate_key):
+            abort(429, description="Demasiadas solicitudes. Intente más tarde.")
         return f(*args, **kwargs)
     return decorated_function

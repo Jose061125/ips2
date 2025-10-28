@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="display-6"><i class="bi bi-calendar-check-fill text-success"></i> Citas Médicas</h1>
+            <p class="text-muted">Programación y seguimiento de citas</p>
+        </div>
+        {% if current_user.has_any_role('admin', 'recepcionista', 'medico') %}
+        <a href="{{ url_for('appointments.create') }}" class="btn btn-success btn-lg">
+            <i class="bi bi-plus-circle"></i> Nueva Cita
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Filter Tabs -->
+    <ul class="nav nav-pills mb-4" id="statusFilter">
+        <li class="nav-item">
+            <a class="nav-link active" href="#" data-status="all">
+                <i class="bi bi-grid"></i> Todas
+                <span class="badge bg-secondary">{{ appointments|length }}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#" data-status="scheduled">
+                <i class="bi bi-clock"></i> Programadas
+                <span class="badge bg-primary">{{ appointments|selectattr('status', 'equalto', 'scheduled')|list|length }}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#" data-status="completed">
+                <i class="bi bi-check-circle"></i> Completadas
+                <span class="badge bg-success">{{ appointments|selectattr('status', 'equalto', 'completed')|list|length }}</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#" data-status="cancelled">
+                <i class="bi bi-x-circle"></i> Canceladas
+                <span class="badge bg-danger">{{ appointments|selectattr('status', 'equalto', 'cancelled')|list|length }}</span>
+            </a>
+        </li>
+    </ul>
+
+    {% if appointments %}
+    <!-- Appointments List -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="appointmentsList">
+        {% for a in appointments %}
+        <div class="col appointment-item" data-status="{{ a.status }}">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header {% if a.status == 'scheduled' %}bg-primary text-white{% elif a.status == 'completed' %}bg-success text-white{% else %}bg-secondary text-white{% endif %}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="bi bi-calendar3"></i> 
+                            {{ a.scheduled_at.strftime('%d/%m/%Y %H:%M') if a.scheduled_at else 'N/A' }}
+                        </h6>
+                        <span class="badge {% if a.status == 'scheduled' %}bg-light text-dark{% else %}bg-dark{% endif %}">
+                            {{ a.status|upper }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="bi bi-person-circle"></i> {{ a.patient.full_name() }}
+                    </h5>
+                    <p class="card-text">
+                        <strong><i class="bi bi-chat-left-text"></i> Motivo:</strong><br>
+                        <span class="text-muted">{{ a.reason or 'Sin especificar' }}</span>
+                    </p>
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="bi bi-card-text"></i> Doc: {{ a.patient.document }}
+                        </small>
+                        {% if a.status == 'scheduled' and current_user.has_any_role('admin', 'recepcionista', 'medico') %}
+                        <form action="{{ url_for('appointments.cancel', appointment_id=a.id) }}" 
+                              method="post" 
+                              onsubmit="return confirm('¿Cancelar esta cita?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-5">
+        <div class="display-1 text-muted mb-3">
+            <i class="bi bi-calendar-x"></i>
+        </div>
+        <h3>No hay citas registradas</h3>
+        <p class="text-muted">Comienza programando la primera cita</p>
+        {% if current_user.has_any_role('admin', 'recepcionista', 'medico') %}
+        <a href="{{ url_for('appointments.create') }}" class="btn btn-success mt-3">
+            <i class="bi bi-plus-circle"></i> Programar Cita
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Status filter functionality
+document.querySelectorAll('#statusFilter .nav-link').forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Update active state
+        document.querySelectorAll('#statusFilter .nav-link').forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+        
+        const status = this.dataset.status;
+        const items = document.querySelectorAll('.appointment-item');
+        
+        items.forEach(item => {
+            if (status === 'all' || item.dataset.status === status) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -25,7 +25,7 @@ def client(app):
 @pytest.fixture
 def test_user(app):
     with app.app_context():
-        user = User(username='testuser')
+        user = User(username='testuser', role='admin')  # Default to admin for tests
         user.set_password('testpass')
         db.session.add(user)
         db.session.commit()

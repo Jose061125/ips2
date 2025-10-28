@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="mb-4">
+        <h1 class="display-6"><i class="bi bi-shield-lock-fill text-danger"></i> Gestión de Usuarios</h1>
+        <p class="text-muted">Administra los roles y permisos de los usuarios del sistema</p>
+    </div>
+
+    <!-- Info Alert -->
+    <div class="alert alert-warning" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i> 
+        <strong>Zona de Administración:</strong> Los cambios en roles afectan los permisos de acceso de los usuarios.
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm border-danger">
+                <div class="card-body">
+                    <h3 class="text-danger">{{ users|selectattr('role', 'equalto', 'admin')|list|length }}</h3>
+                    <p class="text-muted mb-0"><i class="bi bi-shield-fill-check"></i> Administradores</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm border-primary">
+                <div class="card-body">
+                    <h3 class="text-primary">{{ users|selectattr('role', 'equalto', 'medico')|list|length }}</h3>
+                    <p class="text-muted mb-0"><i class="bi bi-heart-pulse"></i> Médicos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm border-info">
+                <div class="card-body">
+                    <h3 class="text-info">{{ users|selectattr('role', 'equalto', 'enfermero')|list|length }}</h3>
+                    <p class="text-muted mb-0"><i class="bi bi-clipboard2-pulse"></i> Enfermeros</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm border-secondary">
+                <div class="card-body">
+                    <h3 class="text-secondary">{{ users|selectattr('role', 'equalto', 'recepcionista')|list|length }}</h3>
+                    <p class="text-muted mb-0"><i class="bi bi-person-workspace"></i> Recepcionistas</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0"><i class="bi bi-people"></i> Lista de Usuarios ({{ users|length }})</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col" width="80"><i class="bi bi-hash"></i> ID</th>
+                            <th scope="col"><i class="bi bi-person"></i> Usuario</th>
+                            <th scope="col"><i class="bi bi-shield"></i> Rol</th>
+                            <th scope="col" class="text-center"><i class="bi bi-gear"></i> Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td class="align-middle"><strong>{{ user.id }}</strong></td>
+                            <td class="align-middle">
+                                <i class="bi bi-person-circle"></i> {{ user.username }}
+                            </td>
+                            <td class="align-middle">
+                                <span class="badge 
+                                    {% if user.role == 'admin' %}bg-danger
+                                    {% elif user.role == 'medico' %}bg-primary
+                                    {% elif user.role == 'enfermero' %}bg-info
+                                    {% else %}bg-secondary{% endif %} fs-6">
+                                    {% if user.role == 'admin' %}<i class="bi bi-shield-fill-check"></i>
+                                    {% elif user.role == 'medico' %}<i class="bi bi-heart-pulse"></i>
+                                    {% elif user.role == 'enfermero' %}<i class="bi bi-clipboard2-pulse"></i>
+                                    {% else %}<i class="bi bi-person-workspace"></i>{% endif %}
+                                    {{ user.role|capitalize }}
+                                </span>
+                            </td>
+                            <td class="align-middle text-center">
+                                <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil-square"></i> Editar Rol
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

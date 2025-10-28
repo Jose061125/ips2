@@ -7,6 +7,7 @@ from ..adapters.sql_user_repository import SqlAlchemyUserRepository
 from ..infrastructure.security.password_policy import PasswordPolicy
 from ..infrastructure.security.rate_limiter import rate_limit
 from ..infrastructure.audit.audit_log import AuditLogger
+from ..models import db
 
 user_repository = SqlAlchemyUserRepository()
 user_service = UserService(user_repository)
@@ -20,19 +21,55 @@ def login():
     
     form = LoginForm()
     if form.validate_on_submit():
-        user = user_service.login(
+        user = user_repository.get_by_username(form.username.data)
+        
+        # Check if account is locked (ISO 27001 - A.9.4.2)
+        if user and user.is_locked():
+            audit_logger.log_action('login_attempt_locked', {
+                'username': form.username.data,
+                'locked_until': user.locked_until.isoformat() if user.locked_until else None
+            })
+            flash('Cuenta bloqueada temporalmente. Intente más tarde.')
+            return render_template('login.html', form=form, title='Login')
+        
+        # Verify credentials
+        authenticated_user = user_service.login(
             username=form.username.data,
             password=form.password.data
         )
-        if user:
-            login_user(user)
-            audit_logger.log_action('login_attempt', {
+        
+        if authenticated_user:
+            # Reset failed attempts on successful login
+            authenticated_user.reset_failed_attempts()
+            db.session.commit()
+            
+            login_user(authenticated_user)
+            audit_logger.log_action('login_success', {
                 'username': form.username.data,
-                'success': user is not None
+                'user_id': authenticated_user.id
             })
             flash('Has iniciado sesión correctamente')
             return redirect(url_for('main.index'))
-        flash('Usuario o contraseña inválidos')
+        else:
+            # Increment failed attempts
+            if user:
+                user.increment_failed_attempts(lockout_duration_minutes=15, max_attempts=5)
+                db.session.commit()
+                
+                if user.is_locked():
+                    flash('Demasiados intentos fallidos. Cuenta bloqueada temporalmente.')
+                else:
+                    remaining = 5 - user.failed_login_attempts
+                    flash(f'Usuario o contraseña inválidos. Intentos restantes: {remaining}')
+            else:
+                flash('Usuario o contraseña inválidos')
+            
+            audit_logger.log_action('login_failure', {
+                'username': form.username.data,
+                'user_exists': user is not None,
+                'attempts': user.failed_login_attempts if user else 0
+            })
+    
     return render_template('login.html', form=form, title='Login')
 
 @auth_bp.route('/logout')
@@ -56,7 +93,8 @@ def register():
 
         success, message = user_service.register_user(
             username=form.username.data,
-            password=form.password.data
+            password=form.password.data,
+            role=form.role.data
         )
         
         flash(message)

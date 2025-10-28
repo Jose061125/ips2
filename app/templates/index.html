@@ -1,16 +1,171 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Inicio</title>
-</head>
-<body>
-    <h1>Página Principal</h1>
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            {% for message in messages %}
-                <p>{{ message }}</p>
-            {% endfor %}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Hero Section -->
+    <div class="jumbotron bg-gradient p-5 rounded-3 mb-4 text-white">
+        <h1 class="display-4">
+            <i class="bi bi-hospital"></i> Sistema de Gestión IPS
+        </h1>
+        <p class="lead">Plataforma integral para la administración de servicios de salud</p>
+        <hr class="my-4 bg-white opacity-25">
+        {% if current_user.is_authenticated %}
+            <p>Bienvenido, <strong>{{ current_user.username }}</strong> - <span class="badge bg-light text-dark">{{ current_user.role|capitalize }}</span></p>
+        {% else %}
+            <p>Sistema de información para instituciones prestadoras de servicios de salud</p>
+            <a class="btn btn-light btn-lg me-2" href="{{ url_for('auth.login') }}" role="button">
+                <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+            </a>
+            <a class="btn btn-outline-light btn-lg" href="{{ url_for('auth.register') }}" role="button">
+                <i class="bi bi-person-plus"></i> Registrarse
+            </a>
         {% endif %}
-    {% endwith %}
-</body>
-</html>
+    </div>
+
+    {% if current_user.is_authenticated %}
+    <!-- Quick Access Cards -->
+    <div class="row g-4">
+        <!-- Pacientes Card -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm hover-card">
+                <div class="card-body text-center">
+                    <div class="display-4 text-primary mb-3">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <h5 class="card-title">Pacientes</h5>
+                    <p class="card-text text-muted">Gestión de información de pacientes</p>
+                    <a href="{{ url_for('patients.index') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-right"></i> Acceder
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Citas Card -->
+        {% if has_endpoint('appointments.index') %}
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm hover-card">
+                <div class="card-body text-center">
+                    <div class="display-4 text-success mb-3">
+                        <i class="bi bi-calendar-check-fill"></i>
+                    </div>
+                    <h5 class="card-title">Citas</h5>
+                    <p class="card-text text-muted">Programación y seguimiento de citas</p>
+                    <a href="{{ url_for('appointments.index') }}" class="btn btn-outline-success">
+                        <i class="bi bi-arrow-right"></i> Acceder
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Historias Clínicas Card -->
+        {% if has_endpoint('records.list_records') %}
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm hover-card">
+                <div class="card-body text-center">
+                    <div class="display-4 text-info mb-3">
+                        <i class="bi bi-file-medical-fill"></i>
+                    </div>
+                    <h5 class="card-title">Historias Clínicas</h5>
+                    <p class="card-text text-muted">Registro médico de pacientes</p>
+                    <a href="{{ url_for('records.list_records') }}" class="btn btn-outline-info">
+                        <i class="bi bi-arrow-right"></i> Acceder
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Empleados Card -->
+        {% if has_endpoint('employees.index') %}
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm hover-card">
+                <div class="card-body text-center">
+                    <div class="display-4 text-warning mb-3">
+                        <i class="bi bi-person-badge-fill"></i>
+                    </div>
+                    <h5 class="card-title">Empleados</h5>
+                    <p class="card-text text-muted">Personal de la institución</p>
+                    <a href="{{ url_for('employees.index') }}" class="btn btn-outline-warning">
+                        <i class="bi bi-arrow-right"></i> Acceder
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Admin Panel Card -->
+        {% if current_user.has_role('admin') and has_endpoint('admin.list_users') %}
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 shadow-sm hover-card border-danger">
+                <div class="card-body text-center">
+                    <div class="display-4 text-danger mb-3">
+                        <i class="bi bi-shield-lock-fill"></i>
+                    </div>
+                    <h5 class="card-title">Administración</h5>
+                    <p class="card-text text-muted">Gestión de usuarios y roles</p>
+                    <a href="{{ url_for('admin.list_users') }}" class="btn btn-outline-danger">
+                        <i class="bi bi-arrow-right"></i> Acceder
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Features Section -->
+    <div class="row mt-5 pt-4">
+        <div class="col-12">
+            <h3 class="mb-4"><i class="bi bi-shield-check"></i> Características del Sistema</h3>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="d-flex">
+                <div class="flex-shrink-0">
+                    <i class="bi bi-lock-fill text-primary fs-3"></i>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <h5>Seguridad ISO 27001</h5>
+                    <p class="text-muted">Control de acceso basado en roles, sesiones seguras y auditoría completa.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="d-flex">
+                <div class="flex-shrink-0">
+                    <i class="bi bi-graph-up text-success fs-3"></i>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <h5>Gestión Eficiente</h5>
+                    <p class="text-muted">Organización optimizada de pacientes, citas y registros médicos.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="d-flex">
+                <div class="flex-shrink-0">
+                    <i class="bi bi-people text-info fs-3"></i>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <h5>Multiusuario</h5>
+                    <p class="text-muted">Permisos diferenciados por rol: admin, médico, enfermero, recepcionista.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.hover-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
+}
+.bg-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+</style>
+{% endblock %}

@@ -13,7 +13,8 @@ def test_register_post(client):
     response = client.post('/auth/register', data={
         'username': 'newuser',
         'password': 'TestPass123!',  # Meets password policy
-        'password2': 'TestPass123!'
+        'password2': 'TestPass123!',
+        'role': 'recepcionista'
     }, follow_redirects=True)
     
     assert response.status_code == 200
@@ -30,7 +31,8 @@ def test_register_post_weak_password(client):
     test_data = {
         'username': 'testuser',
         'password': 'weak',  # Intentionally weak password
-        'password2': 'weak'
+        'password2': 'weak',
+        'role': 'recepcionista'
     }
     
     response = client.post(
@@ -60,7 +62,8 @@ def test_password_policy_validations(client, password, expected_error):
     response = client.post('/auth/register', data={
         'username': 'testuser',
         'password': password,
-        'password2': password
+        'password2': password,
+        'role': 'recepcionista'
     }, follow_redirects=True)
     
     assert response.status_code == 200
@@ -70,7 +73,7 @@ def test_login_get(client):
     """Test login page loads correctly"""
     response = client.get('/auth/login')
     assert response.status_code == 200
-    assert b'Login' in response.data
+    assert b'Iniciar' in response.data or b'Login' in response.data
 
 def test_login_post(client, test_user):
     """Test login with correct credentials"""

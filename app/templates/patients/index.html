@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="display-6"><i class="bi bi-people-fill text-primary"></i> Pacientes</h1>
+            <p class="text-muted">Gestión de información de pacientes</p>
+        </div>
+        {% if current_user.has_any_role('admin', 'recepcionista') %}
+        <a href="{{ url_for('patients.create') }}" class="btn btn-primary btn-lg">
+            <i class="bi bi-plus-circle"></i> Nuevo Paciente
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Search Box -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" id="searchInput" class="form-control" placeholder="Buscar paciente por nombre o documento...">
+            </div>
+        </div>
+        <div class="col-md-6 text-end">
+            <span class="badge bg-info fs-6">Total: {{ patients|length }} pacientes</span>
+        </div>
+    </div>
+
+    {% if patients %}
+    <!-- Patients Table -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="patientsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col"><i class="bi bi-person"></i> Nombre Completo</th>
+                            <th scope="col"><i class="bi bi-card-text"></i> Documento</th>
+                            <th scope="col"><i class="bi bi-telephone"></i> Teléfono</th>
+                            <th scope="col"><i class="bi bi-envelope"></i> Email</th>
+                            <th scope="col" class="text-center"><i class="bi bi-gear"></i> Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in patients %}
+                        <tr>
+                            <td class="align-middle">
+                                <strong>{{ p.full_name() }}</strong>
+                            </td>
+                            <td class="align-middle">
+                                <span class="badge bg-secondary">{{ p.document }}</span>
+                            </td>
+                            <td class="align-middle">{{ p.phone or '-' }}</td>
+                            <td class="align-middle">{{ p.email or '-' }}</td>
+                            <td class="align-middle text-center">
+                                <div class="btn-group" role="group">
+                                    {% if current_user.has_any_role('admin', 'recepcionista') %}
+                                    <a href="{{ url_for('patients.edit', patient_id=p.id) }}" 
+                                       class="btn btn-sm btn-outline-primary" 
+                                       title="Editar">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if has_endpoint('records.list_by_patient') %}
+                                    <a href="{{ url_for('records.list_by_patient', patient_id=p.id) }}" 
+                                       class="btn btn-sm btn-outline-info"
+                                       title="Historia Clínica">
+                                        <i class="bi bi-file-medical"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if current_user.has_role('admin') %}
+                                    <form action="{{ url_for('patients.delete', patient_id=p.id) }}" 
+                                          method="post" 
+                                          style="display:inline"
+                                          onsubmit="return confirm('¿Está seguro de eliminar este paciente? Esta acción no se puede deshacer.');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-5">
+        <div class="display-1 text-muted mb-3">
+            <i class="bi bi-inbox"></i>
+        </div>
+        <h3>No hay pacientes registrados</h3>
+        <p class="text-muted">Comienza agregando tu primer paciente al sistema</p>
+        {% if current_user.has_any_role('admin', 'recepcionista') %}
+        <a href="{{ url_for('patients.create') }}" class="btn btn-primary mt-3">
+            <i class="bi bi-plus-circle"></i> Agregar Paciente
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Simple search functionality
+document.getElementById('searchInput')?.addEventListener('keyup', function() {
+    const searchValue = this.value.toLowerCase();
+    const tableRows = document.querySelectorAll('#patientsTable tbody tr');
+    
+    tableRows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchValue) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

@@ -10,7 +10,7 @@ class UserService:
         """
         self.user_repository = user_repository
 
-    def register_user(self, username: str, password: str) -> Tuple[bool, str]:
+    def register_user(self, username: str, password: str, role: str = 'recepcionista') -> Tuple[bool, str]:
         """
         Lógica de negocio pura para registrar un usuario. No contiene código
         de Flask ni de SQLAlchemy directamente.
@@ -18,7 +18,7 @@ class UserService:
         if self.user_repository.get_by_username(username):
             return (False, "El nombre de usuario ya existe.")
 
-        new_user = User(username=username)
+        new_user = User(username=username, role=role)
         new_user.set_password(password)
         self.user_repository.add(new_user)
 
