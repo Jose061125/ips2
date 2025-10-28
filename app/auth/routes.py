@@ -1,5 +1,5 @@
 from flask import render_template, redirect, url_for, flash
-from flask_login import current_user
+from flask_login import current_user, login_user, logout_user
 from . import auth_bp
 from ..forms import LoginForm, RegistrationForm
 from ..services.user_service import UserService
@@ -52,8 +52,7 @@ def register():
         # Validate password strength
         is_valid, msg = PasswordPolicy.validate_password(form.password.data)
         if not is_valid:
-            flash(msg)
-            return render_template('register.html', form=form)
+            return render_template('register.html', form=form, title='Registro', error=msg)
 
         success, message = user_service.register_user(
             username=form.username.data,

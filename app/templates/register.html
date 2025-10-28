@@ -1,10 +1,10 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ title }}</title>
-</head>
-<body>
+{% extends "base.html" %}
+
+{% block content %}
     <h1>Registro</h1>
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
     <form method="POST">
         {{ form.hidden_tag() }}
         <div>
@@ -30,12 +30,4 @@
         </div>
         {{ form.submit() }}
     </form>
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            {% for message in messages %}
-                <p>{{ message }}</p>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-</body>
-</html>
+{% endblock %}
