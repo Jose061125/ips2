@@ -1,4 +1,4 @@
-# Copilot Instructions for ips2
+# Instructions for ips2
 
 These guidelines help AI coding agents work effectively in this Flask project.
 
