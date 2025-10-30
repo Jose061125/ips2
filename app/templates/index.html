@@ -3,20 +3,20 @@
 {% block content %}
 <div class="container mt-5">
     <!-- Hero Section -->
-    <div class="jumbotron bg-gradient p-5 rounded-3 mb-4 text-white">
+    <div class="jumbotron bg-gradient-light p-5 rounded-3 mb-4 text-dark border">
         <h1 class="display-4">
             <i class="bi bi-hospital"></i> Sistema de Gestión IPS
         </h1>
         <p class="lead">Plataforma integral para la administración de servicios de salud</p>
-        <hr class="my-4 bg-white opacity-25">
+        <hr class="my-4">
         {% if current_user.is_authenticated %}
-            <p>Bienvenido, <strong>{{ current_user.username }}</strong> - <span class="badge bg-light text-dark">{{ current_user.role|capitalize }}</span></p>
+            <p>Bienvenido, <strong>{{ current_user.username }}</strong> - <span class="badge bg-secondary-subtle text-dark">{{ current_user.role|capitalize }}</span></p>
         {% else %}
             <p>Sistema de información para instituciones prestadoras de servicios de salud</p>
-            <a class="btn btn-light btn-lg me-2" href="{{ url_for('auth.login') }}" role="button">
+            <a class="btn btn-primary btn-lg me-2" href="{{ url_for('auth.login') }}" role="button">
                 <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
             </a>
-            <a class="btn btn-outline-light btn-lg" href="{{ url_for('auth.register') }}" role="button">
+            <a class="btn btn-outline-primary btn-lg" href="{{ url_for('auth.register') }}" role="button">
                 <i class="bi bi-person-plus"></i> Registrarse
             </a>
         {% endif %}
@@ -166,6 +166,12 @@
 }
 .bg-gradient {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+.bg-gradient-light {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+hr.my-4 {
+    border-top: 1px solid rgba(0,0,0,0.15);
 }
 </style>
 {% endblock %}

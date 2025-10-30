@@ -1,4 +1,4 @@
-# 📋 INFORME DE REVISIÓN DE CÓDIGO - EVIDENCIA PARA TESIS POR DANIEL ROJAS LIDER DE ARQUITECTURA Y DESARROLLO DE PROYECTO DE SOFTWARE 
+# 📋 INFORME DE REVISIÓN DE CÓDIGO - EVIDENCIA PARA TESIS POR DANIEL ROJAS LIDER DE ARQUITECTURA Y DESARROLLO DE PROYECTOS DE SOFTWARE 
 
 **Proyecto:** Sistema de Gestión IPS  
 **Fecha de Revisión:** 29 de Octubre de 2025  
@@ -6,9 +6,8 @@
 **Versión del Sistema:** 1.0.0  
 **Repositorio:** https://github.com/Jose061125/ips2  
 
----
 
-## 📑 ÍNDICE
+## ��📑 ÍNDICE
 
 1. [Resumen Ejecutivo](#resumen-ejecutivo)
 2. [Configuración del Entorno](#configuración-del-entorno)
