@@ -1,4 +1,4 @@
-# 📋 INFORME DE REVISIÓN DE CÓDIGO - EVIDENCIA PARA TESIS
+# 📋 INFORME DE REVISIÓN DE CÓDIGO - EVIDENCIA PARA TESIS POR DANIEL ROJAS INGENIERO DE SOFTWARE 
 
 **Proyecto:** Sistema de Gestión IPS  
 **Fecha de Revisión:** 29 de Octubre de 2025  
