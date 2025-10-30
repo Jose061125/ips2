@@ -1,6 +1,4 @@
-# Copilot Instructions for ips2
-
-These guidelines help AI coding agents work effectively in this Flask project.
+# Instructions for ips2
 
 ## Arquitectura y flujo principal
 - Patrón: App Factory (ver `app/__init__.py`) + Blueprints (`app/auth`, `app/main`).
