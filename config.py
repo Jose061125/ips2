@@ -8,8 +8,9 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-very-secret'
     WTF_CSRF_ENABLED = True
     WTF_CSRF_SECRET_KEY = os.environ.get('WTF_CSRF_SECRET_KEY') or 'csrf-key-very-secret'
+    # Use absolute path to instance/app.db to avoid ambiguity with working directory
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'sqlite:///app.db'
+        ('sqlite:///' + os.path.join(basedir, 'instance', 'app.db'))
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     TESTING = os.environ.get('TESTING') or False
     
