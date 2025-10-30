@@ -26,6 +26,29 @@ if os.path.exists(instance_db):
     conn = sqlite3.connect(instance_db)
     cols = [r[1] for r in conn.execute("PRAGMA table_info('user')").fetchall()]
     print('instance app.db user columns:', cols)
+
+    # List tables
+    tables = [r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").fetchall()]
+    print('Tables:', tables)
+
+    def count(table):
+        try:
+            return conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+        except Exception as e:
+            return f"error: {e}"
+
+    # Row counts for key tables
+    for t in ['user', 'patients', 'appointments', 'medical_records', 'employees']:
+        if t in tables:
+            print(f"{t}: {count(t)} rows")
+
+    # Sample rows (safe projection)
+    if 'user' in tables:
+        rows = conn.execute("SELECT id, username, role, failed_login_attempts, locked_until FROM user LIMIT 5").fetchall()
+        print('user sample (id, username, role, failed_login_attempts, locked_until):', rows)
+    if 'patients' in tables:
+        rows = conn.execute("SELECT id, first_name, last_name, document FROM patients LIMIT 5").fetchall()
+        print('patients sample (id, first_name, last_name, document):', rows)
     conn.close()
 
 app = create_app()
