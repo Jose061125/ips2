@@ -14,6 +14,19 @@ class User(UserMixin, db.Model):
     locked_until = db.Column(db.DateTime, nullable=True)
 
     def set_password(self, password):
+        """
+        Set user password with validation.
+        ISO 27001: A.9.4.3 - Password management
+        
+        Args:
+            password (str): Plain text password
+        
+        Raises:
+            ValueError: If password doesn't meet requirements
+        """
+        if len(password) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+        
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):

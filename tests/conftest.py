@@ -38,3 +38,23 @@ def auth_client(client, test_user):
         'password': 'testpass'
     }, follow_redirects=True)
     return client
+
+class AuthActions:
+    """Helper class for authentication actions in tests"""
+    def __init__(self, client, app):
+        self._client = client
+        self._app = app
+    
+    def login(self, username='testuser', password='testpass'):
+        with self._app.app_context():
+            return self._client.post('/auth/login', data={
+                'username': username,
+                'password': password
+            }, follow_redirects=True)
+    
+    def logout(self):
+        return self._client.get('/auth/logout', follow_redirects=True)
+
+@pytest.fixture
+def auth(client, app):
+    return AuthActions(client, app)
