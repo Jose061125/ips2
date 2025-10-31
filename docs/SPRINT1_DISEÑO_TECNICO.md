@@ -669,22 +669,10 @@ Puntuación: 6.93/10
 
 ## 🔄 PRÓXIMOS SPRINTS
 
-### Sprint 2: Módulos de Negocio Avanzados
-- Implementar módulo de citas médicas completo
-- Historiales clínicos con versionado
-- Reportes y estadísticas
-
-### Sprint 3: Mejoras de Seguridad
-- Autenticación de dos factores (2FA)
-- Logs de auditoría avanzados (SIEM)
-- Encriptación de datos sensibles en reposo (A.10.1.1)
-
-### Sprint 4: Preparación para Producción
-- Migración a PostgreSQL
-- Implementación de Redis para caché
-- Configuración de CI/CD
-- Monitoreo y alertas
-
----
-
+### Sprint 2: Pruebas y optimizacion: 
+- Ejecucion de pruebas de rendimiento, seguridad y usabilidad, con
+  ajustes basados en retroalimentacion del equipo
+### Sprint 3: Expansion del prototipo 
+- Integracion de funcionalidad avanzadas y mejoras en la arquitectura 
+  seleccionada 
 **🎉 Sprint 1 COMPLETADO con éxito - Todos los objetivos cumplidos**
