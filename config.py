@@ -25,3 +25,14 @@ class Config:
     RATE_LIMIT_MAX_REQUESTS = 30
     RATE_LIMIT_WINDOW = 60  # seconds
     AUDIT_LOG_PATH = 'logs/audit.log'
+
+    # App metadata
+    APP_VERSION = os.environ.get('APP_VERSION', '1.2.0')
+
+    # CORS / API
+    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '*')
+
+    # Caching (Sprint 3 - base)
+    CACHE_TYPE = os.environ.get('CACHE_TYPE', 'SimpleCache')
+    CACHE_DEFAULT_TIMEOUT = int(os.environ.get('CACHE_DEFAULT_TIMEOUT', 300))
+    REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')

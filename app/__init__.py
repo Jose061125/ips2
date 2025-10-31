@@ -1,4 +1,5 @@
 from flask import Flask, session
+from flask_cors import CORS
 from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager
 from .models import db, User
@@ -23,6 +24,12 @@ def create_app(test_config=None):
     csrf.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
+    # CORS solo para rutas de API
+    try:
+        CORS(app, resources={r"/api/*": {"origins": app.config.get('CORS_ORIGINS', '*')}})
+    except Exception:
+        # Si no está instalada la dependencia en algún entorno, no romper app
+        pass
     
     # Configurar duración de sesión (ISO 27001 - A.9.4.2)
     app.permanent_session_lifetime = timedelta(seconds=app.config['PERMANENT_SESSION_LIFETIME'])
@@ -43,6 +50,7 @@ def create_app(test_config=None):
     # Registrar blueprints IPS (independientemente, con manejo de errores por módulo)
     from importlib import import_module
     for mod, bp_name in [
+        ('.api', 'api_bp'),
         ('.patients', 'patients_bp'),
         ('.appointments', 'appointments_bp'),
         ('.records', 'records_bp'),
