@@ -1,5 +1,9 @@
 # 🚀 Sprint 3: Expansión del Prototipo
 
+**Período Proyectado:** Octubre 31 - Noviembre 15, 2025  
+**Duración:** 2 semanas  
+**Estado:** 🔄 En Progreso (30% Completado)
+
 Integración de funcionalidades avanzadas y mejoras en la arquitectura seleccionada.
 
 ## 1. Objetivos del Sprint
@@ -32,22 +36,26 @@ Integración de funcionalidades avanzadas y mejoras en la arquitectura seleccion
 
 ## 4. Backlog (Historias y Tareas)
 
-- Arquitectura
-  - [ ] Separar capa API (`app/api`) con blueprint versionado `/api/v1`
-  - [ ] Configuración de CORS y serialización con Marshmallow
-  - [ ] Centralizar configuración por entorno (dev, test, prod)
-- Performance
-  - [ ] Integrar Flask-Caching en endpoints listados (pacientes)
-  - [ ] Crear índice compuesto sugerido para consultas frecuentes
-- Persistencia
-  - [ ] Inicializar Alembic y crear migración inicial
-  - [ ] Script de datos seed para entornos locales
-- Asíncrono
-  - [ ] Setup Celery + Redis; tarea demo (enviar reporte)
-- DevEx
-  - [ ] Dockerfile y docker-compose con app+redis
-  - [ ] GitHub Actions: lint + pytest + cobertura
-  - [ ] Makefile o scripts para tareas comunes (opcional)
+### Arquitectura (Oct 31 - Nov 2, 2025)
+  - [x] Separar capa API (`app/api`) con blueprint versionado `/api/v1` - *Oct 31*
+  - [x] Configuración de CORS y serialización con Marshmallow - *Oct 31*
+  - [ ] Centralizar configuración por entorno (dev, test, prod) - *Nov 1*
+
+### Performance (Nov 3-5, 2025)
+  - [ ] Integrar Flask-Caching en endpoints listados (pacientes) - *Nov 3*
+  - [ ] Crear índice compuesto sugerido para consultas frecuentes - *Nov 4*
+
+### Persistencia (Nov 6-8, 2025)
+  - [ ] Inicializar Alembic y crear migración inicial - *Nov 6*
+  - [ ] Script de datos seed para entornos locales - *Nov 7*
+
+### Asíncrono (Nov 9-11, 2025)
+  - [ ] Setup Celery + Redis; tarea demo (enviar reporte) - *Nov 10*
+
+### DevEx - Developer Experience (Oct 31 - Nov 2, 2025)
+  - [x] Dockerfile y docker-compose con app+redis - *Oct 31*
+  - [x] GitHub Actions: lint + pytest + cobertura - *Oct 31*
+  - [ ] Makefile o scripts para tareas comunes (opcional) - *Nov 2*
 
 ## 5. Riesgos y Mitigaciones
 
@@ -66,14 +74,25 @@ Integración de funcionalidades avanzadas y mejoras en la arquitectura seleccion
 
 ## 7. Plan de Validación
 
-- Tests unitarios y de integración actualizados (pytest)
-- Seguridad: Bandit + Safety (dependabot en GitHub opcional)
-- Performance: re-ejecutar suite de benchmarks clave
+### Tests y Calidad (Nov 12-13, 2025)
+- [ ] Tests unitarios y de integración actualizados (pytest) - *Nov 12*
+- [ ] Seguridad: Bandit + Safety (dependabot en GitHub opcional) - *Nov 13*
+- [ ] Performance: re-ejecutar suite de benchmarks clave - *Nov 13*
 
-## 8. Cronograma Tentativo (1-1.5 semanas)
+## 8. Cronograma Detallado
 
-- Día 1-2: CI/CD + Docker + requisitos
-- Día 3-4: API v1 + CORS + Marshmallow
-- Día 5: Caching + índices
-- Día 6: Alembic + migraciones
-- Día 7: Celery + validación final
+| Fase | Tareas | Fecha Inicio | Fecha Fin |
+|------|--------|--------------|-----------|
+| **Fase 1: Infraestructura** | CI/CD + Docker + requisitos | Oct 31 | Nov 1 |
+| **Fase 2: API v1** | API + CORS + Marshmallow + Tests | Nov 2 | Nov 4 |
+| **Fase 3: Performance** | Caching + índices DB | Nov 5 | Nov 7 |
+| **Fase 4: Migraciones** | Alembic + seeds | Nov 8 | Nov 10 |
+| **Fase 5: Async** | Celery + Redis worker | Nov 11 | Nov 12 |
+| **Fase 6: Validación** | Tests finales + documentación | Nov 13 | Nov 15 |
+
+### Cronograma Original (1-1.5 semanas)
+- Día 1-2 (Oct 31 - Nov 1): CI/CD + Docker + requisitos ✅
+- Día 3-4 (Nov 2-3): API v1 + CORS + Marshmallow
+- Día 5 (Nov 4): Caching + índices
+- Día 6 (Nov 5-6): Alembic + migraciones
+- Día 7 (Nov 7): Celery + validación final
