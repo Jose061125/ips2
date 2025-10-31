@@ -3,16 +3,17 @@
 ## 📋 Información del Proyecto
 
 **Nombre:** Sistema de Gestión IPS (Institución Prestadora de Servicios de Salud)  
-**Versión:** 1.0.0 MVP  
+**Versión:** 1.2.0 (Sprint 2: Testing y Optimización)  
 **Stack:** Python 3.13 + Flask 3.x + SQLAlchemy + Bootstrap 5  
 **Arquitectura:** Monolito Hexagonal (Puertos y Adaptadores)  
 **Repositorio:** https://github.com/Jose061125/ips2  
+**Última Actualización:** 30 de Octubre de 2025
 
 ---
 
 ## 🎯 Objetivo de la Revisión
 
-Evaluar la calidad del código, arquitectura, seguridad, y cumplimiento de mejores prácticas para un sistema de gestión médica que maneja datos sensibles.
+Evaluar la calidad del código, arquitectura, seguridad, performance, y cumplimiento de mejores prácticas para un sistema de gestión médica que maneja datos sensibles. Incluye validación OWASP Top 10, testing de performance, y accesibilidad WCAG 2.1.
 
 ---
 
@@ -47,19 +48,34 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
-### Paso 3: Instalar Dependencias
+### Paso 3: Instalar Dependencias de Producción
 
 ```bash
 pip install -r requirements.txt
 ```
 
 **Dependencias clave a verificar:**
-- `Flask==3.1.0`
+- `Flask==3.1.2`
 - `Flask-SQLAlchemy==3.1.1`
 - `Flask-Login==0.6.3`
 - `Flask-WTF==1.2.2`
-- `pytest==8.3.4`
-- `pytest-cov==6.0.0` (para cobertura)
+- `Flask-Caching==2.3.0`
+
+### Paso 3.1: Instalar Dependencias de Desarrollo (Sprint 2)
+
+```bash
+pip install -r requirements-dev.txt
+```
+
+**Dependencias de testing y calidad:**
+- `pytest==8.4.2` + `pytest-cov==7.0.0` + `pytest-flask==1.3.0`
+- `pytest-benchmark==4.0.0` (performance testing)
+- `locust==2.31.8` (load testing)
+- `py-spy==0.3.14` + `memory-profiler==0.61.0` (profiling)
+- `selenium==4.25.0` + `beautifulsoup4==4.12.3` (E2E testing)
+- `safety==3.2.0` (dependency scanning)
+- `pylint==3.3.0` + `black==24.8.0` + `isort==5.13.2` (code quality)
+- `faker==30.1.0` (test data generation)
 
 ### Paso 4: Inicializar Base de Datos
 
@@ -70,7 +86,7 @@ python run.py
 Esto creará automáticamente:
 - `instance/app.db` (SQLite)
 - `logs/` (directorio de logs)
-- `logs/audit.log` (log de auditoría)
+- `logs/audit.log` (log de auditoría rotativo)
 
 ### Paso 5: Verificar Instalación
 
@@ -167,12 +183,12 @@ pytest --cov=app --cov-report=html --cov-report=term
 ```
 
 **Métricas esperadas:**
-- Cobertura global: >70%
+- Cobertura global: >70% (actual: 66%, objetivo: 80%+)
 - Módulos críticos (auth, services): >80%
 
 Ver reporte detallado en: `htmlcov/index.html`
 
-#### Tests Específicos por Módulo
+#### Tests Específicos por Módulo (Sprint 1)
 
 ```bash
 # Solo autenticación
@@ -181,11 +197,201 @@ pytest tests/test_auth.py -v
 # Solo servicios
 pytest tests/test_user_service.py -v
 
+# Arquitectura hexagonal
+pytest tests/test_architecture.py -v
+
 # Con output detallado
 pytest -vv -s
 ```
 
-### B. Pruebas Manuales de Funcionalidad
+### B. Pruebas de Performance (Sprint 2)
+
+#### 1. Benchmarking Automatizado
+
+**Ejecutar suite completa de performance:**
+```bash
+pytest tests/test_performance.py -v --benchmark-only
+```
+
+**Tests incluidos (20 tests):**
+- Queries simples: objetivo < 50ms
+- Queries con JOINs: objetivo < 100ms
+- Endpoints API: objetivo < 200ms
+- Bulk operations (100 registros): objetivo < 5s
+- Bulk read (1000 registros): objetivo < 1s
+- Memory usage: objetivo < 50MB
+
+**Ver benchmarks comparativos:**
+```bash
+pytest tests/test_performance.py --benchmark-compare
+```
+
+**Generar reporte JSON:**
+```bash
+pytest tests/test_performance.py --benchmark-json=benchmark_results.json
+```
+
+#### 2. Profiling de Memoria
+
+**Ejecutar profiler:**
+```bash
+python -m memory_profiler scripts/profile_memory.py
+```
+
+**Verificar funciones analizadas:**
+- `create_many_patients(1000)` - Creación masiva
+- `query_with_relationships()` - Prevención N+1
+- `convert_to_dicts()` - Serialización
+
+#### 3. Optimización de Base de Datos
+
+**Crear índices estratégicos (12 índices):**
+```bash
+python scripts/create_indexes.py
+```
+
+**Analizar índices existentes:**
+```bash
+python scripts/create_indexes.py --analyze
+```
+
+**Estimar mejoras de performance:**
+```bash
+python scripts/create_indexes.py --estimate
+```
+
+### C. Pruebas de Seguridad OWASP Top 10 (Sprint 2)
+
+#### 1. Ejecutar Suite Completa de Seguridad
+
+**Todos los tests OWASP:**
+```bash
+pytest tests/test_security_owasp.py -v -m security
+```
+
+**Por categoría específica:**
+```bash
+# A01: Broken Access Control
+pytest tests/test_security_owasp.py::TestA01BrokenAccessControl -v
+
+# A02: Cryptographic Failures
+pytest tests/test_security_owasp.py::TestA02CryptographicFailures -v
+
+# A03: Injection
+pytest tests/test_security_owasp.py::TestA03Injection -v
+
+# A07: Authentication Failures
+pytest tests/test_security_owasp.py::TestA07AuthenticationFailures -v
+
+# A09: Logging Failures
+pytest tests/test_security_owasp.py::TestA09LoggingFailures -v
+```
+
+**Tests críticos implementados (40+ tests):**
+- IDOR (Insecure Direct Object Reference) prevention
+- SQL Injection en login y búsquedas
+- XSS prevention en inputs
+- CSRF token validation
+- Password hashing verification
+- Session security y fixation
+- Rate limiting (5 intentos/minuto)
+- Account lockout (3 intentos fallidos)
+- Audit logging de operaciones críticas
+- Security headers validation
+
+#### 2. Escaneo de Vulnerabilidades en Dependencias
+
+**Ejecutar Safety check:**
+```bash
+safety check --json
+```
+
+**Verificar vulnerabilidades conocidas:**
+```bash
+pytest tests/test_security_owasp.py::TestA06VulnerableComponents::test_no_known_vulnerabilities -v
+```
+
+### D. Pruebas de Usabilidad y Accesibilidad (Sprint 2)
+
+#### 1. Tests Automatizados de UX
+
+**Ejecutar suite completa:**
+```bash
+pytest tests/test_usability.py -v -m usability
+```
+
+**Tests incluidos (30+ tests):**
+- Form validation messages
+- Required fields marcados con asteriscos
+- Error placement consistente
+- Navigation consistency
+- Success/error message display
+- Loading indicators
+- Search functionality
+
+#### 2. Tests de Accesibilidad WCAG 2.1 Level AA
+
+**Validación de accesibilidad:**
+```bash
+pytest tests/test_usability.py -v -m accessibility
+```
+
+**Criterios validados:**
+- Alt text en imágenes
+- Form labels asociados
+- Button text descriptivo
+- ARIA roles y labels
+- Color contrast ratios
+- Keyboard navigation (tab order)
+- Focus indicators visibles
+- Responsive design (viewport meta)
+- Touch targets ≥ 44x44px
+- Font size ≥ 14px
+- Line height ≥ 1.5
+
+### E. Load Testing con Locust (Sprint 2)
+
+#### 1. Ejecutar Pruebas de Carga
+
+**Modo Web UI (recomendado):**
+```bash
+locust -f tests/locustfile.py --host=http://localhost:5000
+```
+
+Abrir navegador en `http://localhost:8089` y configurar:
+- Number of users: 100
+- Spawn rate: 10 users/second
+
+**Modo headless (CI/CD):**
+```bash
+locust -f tests/locustfile.py --host=http://localhost:5000 \
+  --users=100 --spawn-rate=10 --run-time=5m --headless
+```
+
+#### 2. Usuarios Simulados
+
+**IPSUser (90% del tráfico):**
+- View dashboard
+- View/create patients
+- View/create appointments
+- View/create employees
+- Search patients
+- View patient details
+- Logout
+
+**AdminUser (10% del tráfico):**
+- View users
+- View audit logs
+- View reports
+
+#### 3. Métricas Objetivo
+
+- **Throughput:** > 50 RPS
+- **Response Time (p95):** < 500ms
+- **Error Rate:** < 1%
+- **Concurrent Users:** 100 simultáneos sin degradación
+
+### F. Pruebas Manuales de Funcionalidad
 
 #### 1. Autenticación y Roles
 
