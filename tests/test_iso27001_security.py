@@ -126,7 +126,7 @@ class TestISO27001_A10_Cryptography:
             user = User(username='test_complexity')
             
             # Password muy corto debe fallar
-            with pytest.raises(ValueError, match="at least 8 characters"):
+            with pytest.raises(ValueError, match="menos de 8"):
                 user.set_password('short')
             
             # Password válido debe funcionar

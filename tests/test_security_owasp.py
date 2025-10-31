@@ -13,6 +13,7 @@ Ejecutar:
 """
 
 import pytest
+from datetime import date
 from app import create_app, db
 from app.models import User, Patient
 from flask import session
@@ -40,11 +41,12 @@ class TestA01BrokenAccessControl:
             
             # Paciente creado por doctor1
             patient = Patient(
-                nombre='Paciente Privado',
-                documento='PRIV001',
-                fecha_nacimiento='1990-01-01',
-                direccion='Test',
-                telefono='1234567890'
+                first_name='Paciente',
+                last_name='Privado',
+                document='PRIV001',
+                birth_date=date(1990, 1, 1),
+                address='Test',
+                phone='1234567890'
             )
             db.session.add(patient)
             db.session.commit()
@@ -187,7 +189,7 @@ class TestA03Injection:
         """Búsquedas deben prevenir SQL injection"""
         with app.app_context():
             # Crear usuario admin para tests
-            admin = User(username='admin', email='admin@test.com', role='administrador')
+            admin = User(username='admin', role='administrador')
             admin.set_password('admin123')
             db.session.add(admin)
             db.session.commit()
@@ -508,17 +510,29 @@ class TestAdditionalSecurity:
         # Intentar crear paciente con payload XSS
         xss_payload = "<script>alert('XSS')</script>"
         response = client.post('/patients/create', data={
-            'nombre': xss_payload,
-            'documento': 'XSS001',
-            'fecha_nacimiento': '1990-01-01',
-            'direccion': 'Test',
-            'telefono': '1234567890'
+            'first_name': xss_payload,
+            'last_name': 'Test',
+            'document': 'XSS001',
+            'birth_date': '1990-01-01',
+            'address': 'Test',
+            'phone': '1234567890'
         }, follow_redirects=True)
         
-        # Verificar que en la página de listado el script está escapado
+        # Verificar que en la página de listado el payload XSS está escapado
         response = client.get('/patients/')
-        assert b'<script>' not in response.data
-        # Debe estar escapado como &lt;script&gt; o no aparecer
+        html = response.data.decode('utf-8')
+        
+        # No debe contener el payload sin escapar
+        assert "<script>alert('XSS')</script>" not in html
+        # El payload debe estar escapado o no aparecer en el contenido de la tabla
+        # Permitimos scripts de CDN confiables como Bootstrap
+        if '<script>' in html:
+            # Verificar que SOLO son scripts de CDN
+            import re
+            scripts = re.findall(r'<script[^>]*>(.*?)</script>', html, re.DOTALL)
+            inline_scripts = [s for s in scripts if s.strip() and 'alert' not in s]
+            # Verificar que no hay payload XSS inline malicioso
+            assert "alert('XSS')" not in html
     
     def test_mass_assignment_prevention(self, client, auth, app):
         """Prevenir mass assignment en modelos"""

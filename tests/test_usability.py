@@ -140,7 +140,7 @@ class TestNavigationUsability:
     def test_breadcrumbs_for_deep_pages(self, client, auth, app):
         """Páginas profundas deben tener breadcrumbs"""
         with app.app_context():
-            admin = User(username='admin', email='admin@test.com', role='administrador')
+            admin = User(username='admin', role='administrador')
             admin.set_password('admin123')
             db.session.add(admin)
             db.session.commit()
@@ -197,18 +197,24 @@ class TestUserFeedback:
         
         # Crear paciente
         response = client.post('/patients/create', data={
-            'nombre': 'Test Patient',
-            'documento': 'TEST001',
-            'fecha_nacimiento': '1990-01-01',
-            'direccion': 'Test Address',
-            'telefono': '1234567890'
+            'first_name': 'Test',
+            'last_name': 'Patient',
+            'document': 'USABILITY001',
+            'birth_date': '1990-01-01',
+            'address': 'Test Address',
+            'phone': '1234567890'
         }, follow_redirects=True)
         
-        html = response.data.decode('utf-8', errors='ignore').lower()
+        html = response.data.decode('utf-8').lower()
         
-        # Debe haber mensaje de éxito
-        success_indicators = ['success', 'exitoso', 'creado', 'guardado', 'saved', 'created']
-        assert any(indicator in html for indicator in success_indicators)
+        # Debe contener indicadores de éxito
+        success_indicators = [
+            'éxito', 'exitoso', 'creado', 'guardado', 'success',
+            'alert-success', 'text-success', 'bg-success'
+        ]
+        
+        assert any(indicator in html for indicator in success_indicators), \
+            "Debe mostrar mensaje de éxito después de crear paciente"
     
     def test_error_messages_are_user_friendly(self, client, auth, app):
         """Mensajes de error deben ser comprensibles"""

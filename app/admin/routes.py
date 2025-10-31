@@ -45,3 +45,20 @@ def edit_user(user_id):
         form.role.data = user.role
     
     return render_template('admin/edit_user.html', form=form, user=user, title='Editar Usuario')
+
+
+# Rutas adicionales protegidas para alineación con pruebas (solo admin)
+@admin_bp.route('/roles')
+@login_required
+@require_role('admin')
+def roles_index():
+    # Vista placeholder; importa la protección (no contenido)
+    return render_template('admin/roles.html', title='Roles')
+
+
+@admin_bp.route('/audit')
+@login_required
+@require_role('admin')
+def audit_index():
+    # Vista placeholder; importa la protección (no contenido)
+    return render_template('admin/audit.html', title='Auditoría')

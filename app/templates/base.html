@@ -14,7 +14,7 @@
             <a class="navbar-brand" href="{{ url_for('main.index') }}">
                 <i class="bi bi-hospital-fill"></i> IPS System
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -91,9 +91,21 @@
     {% if messages %}
         <div class="container mt-3">
             {% for message in messages %}
-                <div class="alert alert-info alert-dismissible fade show shadow-sm" role="alert">
-                    <i class="bi bi-info-circle-fill"></i> {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                {% set alert_class = "alert-info" %}
+                {% set icon_class = "bi-info-circle-fill" %}
+                {% if 'correctamente' in message.lower() or 'éxito' in message.lower() or 'exitoso' in message.lower() or 'creado' in message.lower() or 'actualizado' in message.lower() or 'guardado' in message.lower() %}
+                    {% set alert_class = "alert-success" %}
+                    {% set icon_class = "bi-check-circle-fill" %}
+                {% elif 'error' in message.lower() or 'no encontrado' in message.lower() or 'ya existe' in message.lower() %}
+                    {% set alert_class = "alert-danger" %}
+                    {% set icon_class = "bi-exclamation-circle-fill" %}
+                {% elif 'advertencia' in message.lower() %}
+                    {% set alert_class = "alert-warning" %}
+                    {% set icon_class = "bi-exclamation-triangle-fill" %}
+                {% endif %}
+                <div class="alert {{ alert_class }} alert-dismissible fade show shadow-sm" role="alert">
+                    <i class="bi {{ icon_class }}"></i> {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             {% endfor %}
         </div>

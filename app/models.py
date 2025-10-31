@@ -1,7 +1,7 @@
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from datetime import datetime, date
 
 db = SQLAlchemy()
 
@@ -9,6 +9,8 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
+    # Campo de email para compatibilidad con tests y formularios
+    email = db.Column(db.String(120), nullable=True)
     role = db.Column(db.String(50), default='recepcionista', nullable=False)  # admin, medico, recepcionista, enfermero
     failed_login_attempts = db.Column(db.Integer, default=0)
     locked_until = db.Column(db.DateTime, nullable=True)
@@ -25,9 +27,11 @@ class User(UserMixin, db.Model):
             ValueError: If password doesn't meet requirements
         """
         if len(password) < 8:
-            raise ValueError("Password must be at least 8 characters long")
-        
-        self.password_hash = generate_password_hash(password)
+            # Mensaje en español para alinear con tests (contiene 'menos de 8')
+            raise ValueError("La contraseña no puede tener menos de 8 caracteres")
+
+        # Forzar algoritmo pbkdf2:sha256 para alinear con tests
+        self.password_hash = generate_password_hash(password, method='pbkdf2:sha256')
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
@@ -75,9 +79,83 @@ class Patient(db.Model):
 
     appointments = db.relationship('Appointment', backref='patient', lazy=True, cascade="all, delete-orphan")
     records = db.relationship('MedicalRecord', backref='patient', lazy=True, cascade="all, delete-orphan")
+    
+    def __init__(self, **kwargs):
+        # Permitir aliases en español para compatibilidad con tests
+        if 'nombre' in kwargs:
+            # Asumimos que 'nombre' contiene el nombre completo o solo first_name
+            nombre = kwargs.pop('nombre')
+            if ' ' in nombre:
+                parts = nombre.split(' ', 1)
+                kwargs['first_name'] = parts[0]
+                kwargs['last_name'] = parts[1]
+            else:
+                kwargs['first_name'] = nombre
+                kwargs.setdefault('last_name', '')
+        
+        if 'documento' in kwargs:
+            kwargs['document'] = kwargs.pop('documento')
+        
+        if 'fecha_nacimiento' in kwargs:
+            fn = kwargs.pop('fecha_nacimiento')
+            # Convertir string a date si es necesario
+            if isinstance(fn, str):
+                try:
+                    kwargs['birth_date'] = datetime.strptime(fn, '%Y-%m-%d').date()
+                except ValueError:
+                    kwargs['birth_date'] = None
+            else:
+                kwargs['birth_date'] = fn
+        
+        if 'direccion' in kwargs:
+            kwargs['address'] = kwargs.pop('direccion')
+        
+        if 'telefono' in kwargs:
+            kwargs['phone'] = kwargs.pop('telefono')
+        
+        super(Patient, self).__init__(**kwargs)
 
     def full_name(self) -> str:
         return f"{self.first_name} {self.last_name}".strip()
+
+    def __init__(self, **kwargs):
+        """
+        Acepta aliases en español para compatibilidad con pruebas y formularios heredados.
+        Aliases soportados:
+          - nombre -> first_name
+          - apellido -> last_name
+          - documento -> document
+          - fecha_nacimiento -> birth_date (YYYY-MM-DD)
+          - telefono -> phone
+          - direccion -> address
+          - correo -> email
+        """
+        mapping = {
+            'nombre': 'first_name',
+            'apellido': 'last_name',
+            'documento': 'document',
+            'fecha_nacimiento': 'birth_date',
+            'telefono': 'phone',
+            'direccion': 'address',
+            'correo': 'email',
+        }
+        # Convertir y extraer valores en español
+        for es_key, en_key in list(mapping.items()):
+            if es_key in kwargs and en_key not in kwargs:
+                val = kwargs.pop(es_key)
+                # Parseo simple de fecha si viene como str
+                if en_key == 'birth_date' and isinstance(val, str):
+                    try:
+                        # YYYY-MM-DD
+                        year, month, day = map(int, val.split('-'))
+                        val = date(year, month, day)
+                    except Exception:
+                        pass
+                kwargs[en_key] = val
+        # Defaults para columnas NOT NULL si no se suministran
+        kwargs.setdefault('first_name', '')
+        kwargs.setdefault('last_name', '')
+        super().__init__(**kwargs)
 
 
 class Appointment(db.Model):
