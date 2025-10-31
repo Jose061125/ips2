@@ -36,7 +36,11 @@ def create():
             email=form.email.data,
             address=form.address.data,
         )
-        flash(msg)
+        # Flash con mensaje claro para detección contextual
+        if ok:
+            flash(f'Paciente {form.first_name.data} {form.last_name.data} creado correctamente', 'success')
+        else:
+            flash(f'Error al crear paciente: {msg}', 'danger')
         audit.log_action('patient_create', {'document': form.document.data, 'success': ok})
         if ok:
             return redirect(url_for('patients.index'))
@@ -50,7 +54,7 @@ def create():
 def edit(patient_id):
     patient = service.get(patient_id)
     if not patient:
-        flash('Paciente no encontrado')
+        flash('Paciente no encontrado', 'danger')
         return redirect(url_for('patients.index'))
     form = PatientForm(obj=patient)
     if form.validate_on_submit():
@@ -64,7 +68,10 @@ def edit(patient_id):
             email=form.email.data,
             address=form.address.data,
         )
-        flash(msg)
+        if ok:
+            flash(f'Paciente actualizado correctamente', 'success')
+        else:
+            flash(f'Error al actualizar paciente: {msg}', 'danger')
         audit.log_action('patient_update', {'patient_id': patient_id, 'success': ok})
         if ok:
             return redirect(url_for('patients.index'))
@@ -77,6 +84,9 @@ def edit(patient_id):
 @rate_limit
 def delete(patient_id):
     ok, msg = service.delete(patient_id)
-    flash(msg)
+    if ok:
+        flash('Paciente eliminado correctamente', 'success')
+    else:
+        flash(f'Error al eliminar paciente: {msg}', 'danger')
     audit.log_action('patient_delete', {'patient_id': patient_id, 'success': ok})
     return redirect(url_for('patients.index'))

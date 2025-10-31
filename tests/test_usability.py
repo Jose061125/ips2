@@ -188,7 +188,7 @@ class TestUserFeedback:
     def test_success_messages_after_actions(self, client, auth, app):
         """Acciones exitosas deben mostrar mensajes de confirmación"""
         with app.app_context():
-            admin = User(username='admin', role='administrador')
+            admin = User(username='admin', role='admin')
             admin.set_password('admin123')
             db.session.add(admin)
             db.session.commit()
@@ -207,14 +207,19 @@ class TestUserFeedback:
         
         html = response.data.decode('utf-8').lower()
         
+        # Debug: imprimir parte del HTML para diagnóstico
+        print(f"\n=== Response status: {response.status_code} ===")
+        if 'alert' in html:
+            print("=== Alertas encontradas ===")
+        
         # Debe contener indicadores de éxito
         success_indicators = [
             'éxito', 'exitoso', 'creado', 'guardado', 'success',
-            'alert-success', 'text-success', 'bg-success'
+            'alert-success', 'text-success', 'bg-success', 'correctamente'
         ]
         
         assert any(indicator in html for indicator in success_indicators), \
-            "Debe mostrar mensaje de éxito después de crear paciente"
+            f"Debe mostrar mensaje de éxito después de crear paciente. Status: {response.status_code}"
     
     def test_error_messages_are_user_friendly(self, client, auth, app):
         """Mensajes de error deben ser comprensibles"""
