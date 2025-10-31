@@ -37,7 +37,7 @@ def create():
         try:
             scheduled_at = datetime.strptime(form.scheduled_at.data, '%Y-%m-%d %H:%M')
         except ValueError:
-            flash('Formato de fecha inválido. Use YYYY-MM-DD HH:MM')
+            flash('Formato de fecha inválido. Use YYYY-MM-DD HH:MM', 'danger')
             return render_template('appointments/form.html', form=form, title='Agendar Cita')
 
         ok, msg, appt = service.schedule(
@@ -45,7 +45,10 @@ def create():
             scheduled_at=scheduled_at,
             reason=form.reason.data,
         )
-        flash(msg)
+        if ok:
+            flash('Cita agendada correctamente', 'success')
+        else:
+            flash(f'Error al agendar cita: {msg}', 'danger')
         audit.log_action('appointment_create', {'patient_id': form.patient_id.data, 'success': ok})
         if ok:
             return redirect(url_for('appointments.index'))
@@ -58,6 +61,33 @@ def create():
 @rate_limit
 def cancel(appointment_id):
     ok, msg = service.cancel(appointment_id)
-    flash(msg)
+    if ok:
+        flash('Cita cancelada correctamente', 'success')
+    else:
+        flash(f'Error al cancelar cita: {msg}', 'danger')
     audit.log_action('appointment_cancel', {'appointment_id': appointment_id, 'success': ok})
     return redirect(url_for('appointments.index'))
+
+
+@appointments_bp.route('/<int:appointment_id>/complete', methods=['POST'])
+@login_required
+@require_any_role('admin', 'medico')
+@rate_limit
+def complete(appointment_id):
+    ok, msg = service.complete(appointment_id)
+    if ok:
+        flash('Cita completada correctamente', 'success')
+    else:
+        flash(f'Error al completar cita: {msg}', 'danger')
+    audit.log_action('appointment_complete', {'appointment_id': appointment_id, 'success': ok})
+    return redirect(url_for('appointments.index'))
+
+
+@appointments_bp.route('/<int:appointment_id>')
+@login_required
+def view(appointment_id):
+    appt = service.get(appointment_id)
+    if not appt:
+        flash('Cita no encontrada', 'danger')
+        return redirect(url_for('appointments.index'))
+    return render_template('appointments/view.html', appointment=appt, title='Detalle de Cita')

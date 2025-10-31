@@ -166,6 +166,7 @@ class Appointment(db.Model):
     reason = db.Column(db.String(255), nullable=True)
     status = db.Column(db.String(20), default='scheduled', nullable=False)  # scheduled|cancelled|completed
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    # Note: relationship defined in Patient model with backref='patient'
 
 
 class MedicalRecord(db.Model):

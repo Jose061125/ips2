@@ -45,7 +45,7 @@ def app():
 def _create_test_data():
     """Crea dataset de prueba para benchmarks"""
     # Usuario administrador
-    admin = User(username='admin', role='administrador')
+    admin = User(username='admin', role='admin')
     admin.set_password('admin123')
     db.session.add(admin)
     

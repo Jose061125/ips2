@@ -1,4 +1,4 @@
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 from datetime import datetime
 from ..models import Appointment
 from .ports import AppointmentRepositoryPort
@@ -29,8 +29,11 @@ class AppointmentService:
         self.repo.update(appt)
         return True, "Cita completada."
 
-    def list(self) -> list[Appointment]:
+    def get(self, appointment_id: int) -> Optional[Appointment]:
+        return self.repo.get(appointment_id)
+
+    def list(self) -> List[Appointment]:
         return self.repo.list()
 
-    def list_by_patient(self, patient_id: int) -> list[Appointment]:
+    def list_by_patient(self, patient_id: int) -> List[Appointment]:
         return self.repo.list_by_patient(patient_id)
