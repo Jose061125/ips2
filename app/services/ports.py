@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Tuple
 from ..models import User, Patient, Appointment, MedicalRecord, Employee
 
 class UserRepositoryPort(ABC):
@@ -44,6 +44,14 @@ class PatientRepositoryPort(ABC):
 
     @abstractmethod
     def list(self) -> List[Patient]:
+        pass
+
+    @abstractmethod
+    def search_paginated(self, q: str | None, page: int, per_page: int) -> Tuple[List[Patient], int]:
+        """
+        Retorna una tupla (items, total) aplicando filtro opcional por q sobre
+        first_name, last_name o document y paginación (page, per_page).
+        """
         pass
 
 

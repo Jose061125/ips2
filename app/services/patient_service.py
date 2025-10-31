@@ -1,4 +1,4 @@
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 from ..models import Patient
 from .ports import PatientRepositoryPort
 
@@ -42,5 +42,13 @@ class PatientService:
     def get(self, patient_id: int) -> Optional[Patient]:
         return self.repo.get(patient_id)
 
-    def list(self) -> list[Patient]:
+    def list(self) -> List[Patient]:
         return self.repo.list()
+
+    def list_paginated(self, q: str | None, page: int, per_page: int) -> Tuple[List[Patient], int]:
+        q = (q or "").strip()
+        if page < 1:
+            page = 1
+        if per_page < 1:
+            per_page = 10
+        return self.repo.search_paginated(q or None, page, per_page)

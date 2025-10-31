@@ -6,6 +6,7 @@ def test_api_health_endpoint():
     app = create_app({
         "TESTING": True,
         "WTF_CSRF_ENABLED": False,
+        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
     })
     with app.test_client() as client:
         resp = client.get("/api/v1/health")

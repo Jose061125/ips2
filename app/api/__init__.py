@@ -1,9 +1,9 @@
 from flask import Blueprint, jsonify, current_app, request
 from datetime import datetime, timezone
-from sqlalchemy import or_
-from sqlalchemy.exc import IntegrityError
 from marshmallow import Schema, fields, validates, ValidationError
-from ..models import db, Patient
+from sqlalchemy.exc import IntegrityError
+from ..adapters.sql_patient_repository import SqlAlchemyPatientRepository
+from ..services.patient_service import PatientService
 
 api_bp = Blueprint("api", __name__, url_prefix="/api/v1")
 
@@ -38,6 +38,8 @@ class PatientSchema(Schema):
 
 patient_schema = PatientSchema()
 patients_schema = PatientSchema(many=True)
+repo = SqlAlchemyPatientRepository()
+service = PatientService(repo)
 
 
 @api_bp.get("/patients")
@@ -49,18 +51,7 @@ def list_patients():
     except ValueError:
         return jsonify({"error": "invalid pagination params"}), 400
 
-    query = Patient.query
-    if q:
-        like = f"%{q}%"
-        query = query.filter(or_(
-            Patient.first_name.ilike(like),
-            Patient.last_name.ilike(like),
-            Patient.document.ilike(like),
-        ))
-
-    total = query.count()
-    items = query.order_by(Patient.created_at.desc()) 
-    items = items.offset((page - 1) * per_page).limit(per_page).all()
+    items, total = service.list_paginated(q, page, per_page)
 
     return jsonify({
         "items": patients_schema.dump(items),
@@ -80,12 +71,10 @@ def create_patient():
     except ValidationError as ve:
         return jsonify({"errors": ve.messages}), 422
 
-    patient = Patient(**data)
-    db.session.add(patient)
-    try:
-        db.session.commit()
-    except IntegrityError:
-        db.session.rollback()
-        return jsonify({"error": "document must be unique"}), 409
-
+    ok, msg, patient = service.create(**data)
+    if not ok:
+        # Document duplicado
+        if "documento ya existe" in msg or "document" in msg.lower():
+            return jsonify({"error": "document must be unique"}), 409
+        return jsonify({"error": msg}), 400
     return jsonify(patient_schema.dump(patient)), 201
