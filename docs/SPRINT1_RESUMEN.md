@@ -223,7 +223,7 @@ HTTP Request → Route → Service → Port → Adapter → Database
 **Revisor Técnico:** Daniel Rojas  
 **Fecha Inicio:** Octubre 1, 2025  
 **Fecha Fin:** Octubre 15, 2025  
-**Sprint:** 1 de 4  
+**Sprint:** 1 de 3  
 **Estado:** ✅ COMPLETADO
 
 ---
